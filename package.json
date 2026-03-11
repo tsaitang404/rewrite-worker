@@ -1,0 +1,20 @@
+{
+  "name": "rewrite-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker that rewrites origin server host/path, similar to Cloudflare Origin Rules",
+  "main": "src/index.ts",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.12.21",
+    "@cloudflare/workers-types": "4.20260310.1",
+    "typescript": "5.8.2",
+    "vitest": "3.2.4",
+    "wrangler": "4.72.0"
+  }
+}
