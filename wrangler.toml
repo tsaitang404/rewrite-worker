@@ -1,0 +1,20 @@
+name = "rewrite-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Example rewrite rules (JSON array of RewriteRule objects).
+# Each rule is evaluated in order; the first match wins.
+#
+# Rule fields:
+#   match.hostname  - (optional) exact hostname to match (e.g. "example.com")
+#   match.path      - (optional) path prefix or glob to match (e.g. "/api/*")
+#   rewrite.hostname - (optional) new origin hostname
+#   rewrite.port     - (optional) new origin port (number)
+#   rewrite.path     - (optional) new path; supports "*" wildcard back-reference
+#
+# Example:
+# [vars]
+# REWRITE_RULES = '[{"match":{"hostname":"example.com","path":"/api/*"},"rewrite":{"hostname":"api.backend.internal","path":"/v2/*"}}]'
+
+[vars]
+REWRITE_RULES = "[]"
