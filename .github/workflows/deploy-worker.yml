@@ -1,0 +1,50 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          REWRITE_RULES_JSON: ${{ vars.REWRITE_RULES_JSON }}
+          WORKER_ROUTES: ${{ vars.WORKER_ROUTES }}
+        run: |
+          set -euo pipefail
+
+          CMD=(npx wrangler deploy --keep-vars=true --var "REWRITE_RULES:${REWRITE_RULES_JSON}")
+
+          while IFS= read -r route; do
+            # Skip empty lines so users can format WORKER_ROUTES for readability.
+            if [ -n "${route}" ]; then
+              CMD+=(--routes "${route}")
+            fi
+          done <<< "${WORKER_ROUTES}"
+
+          "${CMD[@]}"

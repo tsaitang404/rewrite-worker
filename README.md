@@ -91,6 +91,38 @@ npm run deploy
 This keeps repository defaults reusable while still allowing each developer
 to run locally with their own routes/rules/tokens.
 
+## CI/CD (GitHub Actions)
+
+This repository includes an automatic deploy workflow at `.github/workflows/deploy-worker.yml`.
+
+- Trigger:
+  - Push to `main`
+  - Manual run via `workflow_dispatch`
+- Pipeline steps:
+  - Install dependencies
+  - Run tests
+  - Run type-check
+  - Deploy with Wrangler
+
+Before it can deploy, add these repository secrets in GitHub:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+Also add these repository variables in GitHub:
+
+- `REWRITE_RULES_JSON`
+- `WORKER_ROUTES`
+
+Example variable values:
+
+- `REWRITE_RULES_JSON` = `[{"match":{"hostname":"www.example.com"},"rewrite":{"hostname":"backend.example.net","path":"/share"}},{"match":{"hostname":"example.com"},"rewrite":{"hostname":"backend.example.net","path":"/share"}}]`
+- `WORKER_ROUTES` =
+  `example.com/*`
+  `www.example.com/*`
+
+`WORKER_ROUTES` supports any number of routes, one route per line.
+
 ## How it works
 
 1. Each incoming request is matched against the configured rules in order.
