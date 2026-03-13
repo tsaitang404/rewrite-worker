@@ -2,6 +2,8 @@
 
 Cloudflare Worker that rewrites the origin host and/or path of incoming requests — equivalent to Cloudflare's **Origin Rules** feature.
 
+中文文档: [docs/zh-CN.md](docs/zh-CN.md)
+
 ## Features
 
 - Match requests by hostname, path glob, or both
