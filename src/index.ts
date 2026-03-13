@@ -33,9 +33,26 @@ export interface RewriteTarget {
   path?: string;
 }
 
+export interface RedirectTarget {
+  /**
+   * Redirect destination. Accepts an absolute URL ("https://example.com/Index")
+   * or a path ("/Index"). Use "*" to substitute the wildcard capture from the
+   * match path.
+   */
+  location: string;
+  /** HTTP status code. Defaults to 302. */
+  status?: 301 | 302 | 307 | 308;
+}
+
 export interface RewriteRule {
   match: MatchCondition;
-  rewrite: RewriteTarget;
+  /**
+   * Proxy the request to a different origin.
+   * When both `redirect` and `rewrite` are set, `redirect` takes priority.
+   */
+  rewrite?: RewriteTarget;
+  /** When present, returns an HTTP redirect instead of proxying. */
+  redirect?: RedirectTarget;
 }
 
 export interface Env {
@@ -126,6 +143,7 @@ export function applyRewrite(original: URL, rewrite: RewriteTarget, captured: st
  */
 export function rewriteUrl(url: URL, rules: RewriteRule[]): URL | null {
   for (const rule of rules) {
+    if (!rule.rewrite) continue; // skip redirect-only rules
     const captured = matchRule(url, rule);
     if (captured !== null) {
       return applyRewrite(url, rule.rewrite, captured);
@@ -138,22 +156,33 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const rules = parseRules(env.REWRITE_RULES);
     const url = new URL(request.url);
-    const rewritten = rewriteUrl(url, rules);
 
-    if (!rewritten) {
-      // No rule matched – proxy the request as-is to the original origin.
-      return fetch(request);
+    for (const rule of rules) {
+      const captured = matchRule(url, rule);
+      if (captured === null) continue;
+
+      if (rule.redirect) {
+        const rawLocation = rule.redirect.location.replaceAll("*", captured);
+        // Resolve path-only locations against the current origin.
+        const target = rawLocation.startsWith("/")
+          ? `${url.protocol}//${url.host}${rawLocation}`
+          : rawLocation;
+        return Response.redirect(target, rule.redirect.status ?? 302);
+      }
+
+      if (rule.rewrite) {
+        const rewritten = applyRewrite(url, rule.rewrite, captured);
+        const newRequest = new Request(rewritten.toString(), {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+          redirect: "follow",
+        });
+        return fetch(newRequest);
+      }
     }
 
-    // Build a new request with the rewritten URL while preserving all original
-    // headers and the HTTP method/body.
-    const newRequest = new Request(rewritten.toString(), {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-      redirect: "follow",
-    });
-
-    return fetch(newRequest);
+    // No rule matched – proxy the request as-is to the original origin.
+    return fetch(request);
   },
 } satisfies ExportedHandler<Env>;

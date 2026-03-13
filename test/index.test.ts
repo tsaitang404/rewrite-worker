@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseRules, matchRule, applyRewrite, rewriteUrl } from "../src/index";
-import type { RewriteRule } from "../src/index";
+import type { RewriteRule, RedirectTarget } from "../src/index";
 
 // ---------------------------------------------------------------------------
 // parseRules
@@ -171,5 +171,36 @@ describe("rewriteUrl", () => {
     ];
     const result = rewriteUrl(new URL("https://example.com/path"), rules);
     expect(result!.hostname).toBe("second.backend");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rewriteUrl – redirect rule interactions
+// ---------------------------------------------------------------------------
+describe("rewriteUrl (redirect rules)", () => {
+    it("returns null for a redirect-only rule (no rewrite field)", () => {
+      const rules: RewriteRule[] = [
+        { match: { hostname: "example.com" }, redirect: { location: "/Index" } },
+      ];
+      expect(rewriteUrl(new URL("https://example.com/"), rules)).toBeNull();
+    });
+
+    it("falls through a redirect-only rule to find a rewrite rule", () => {
+      const rules: RewriteRule[] = [
+        { match: { path: "/" }, redirect: { location: "/Index" } },
+        { match: { path: "/*" }, rewrite: { hostname: "backend.internal" } },
+      ];
+      const result = rewriteUrl(new URL("https://example.com/"), rules);
+      expect(result!.hostname).toBe("backend.internal");
+    });
+
+    it("processes a rewrite rule that follows redirect rules normally", () => {
+      const rules: RewriteRule[] = [
+        { match: { hostname: "other.com" }, redirect: { location: "/Index" } },
+        { match: { hostname: "example.com" }, rewrite: { hostname: "backend.internal" } },
+      ];
+      const result = rewriteUrl(new URL("https://example.com/path"), rules);
+      expect(result!.hostname).toBe("backend.internal");
+      expect(result!.pathname).toBe("/path");
   });
 });
