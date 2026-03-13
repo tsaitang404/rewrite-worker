@@ -44,13 +44,21 @@ jobs:
             exit 1
           fi
 
-          CMD=(npx wrangler deploy --keep-vars=true --var "REWRITE_RULES:${REWRITE_RULES_JSON}")
+          cp wrangler.toml wrangler.ci.toml
 
-          while IFS= read -r route; do
-            # Skip empty lines so users can format WORKER_ROUTES for readability.
-            if [ -n "${route}" ]; then
-              CMD+=(--routes "{\"pattern\":\"${route}\",\"zone_name\":\"${WORKER_ZONE_NAME}\"}")
-            fi
-          done <<< "${WORKER_ROUTES}"
+          {
+            echo
+            echo "routes = ["
+            while IFS= read -r route; do
+              # Skip empty lines so users can format WORKER_ROUTES for readability.
+              if [ -n "${route}" ]; then
+                echo "  { pattern = \"${route}\", zone_name = \"${WORKER_ZONE_NAME}\" },"
+              fi
+            done <<< "${WORKER_ROUTES}"
+            echo "]"
+          } >> wrangler.ci.toml
 
-          "${CMD[@]}"
+          npx wrangler deploy \
+            --config wrangler.ci.toml \
+            --keep-vars=true \
+            --var "REWRITE_RULES:${REWRITE_RULES_JSON}"
