@@ -113,6 +113,7 @@ Also add these repository variables in GitHub:
 
 - `REWRITE_RULES_JSON`
 - `WORKER_ROUTES`
+- `WORKER_ZONE_NAME`
 
 Example variable values:
 
@@ -120,6 +121,7 @@ Example variable values:
 - `WORKER_ROUTES` =
   `example.com/*`
   `www.example.com/*`
+- `WORKER_ZONE_NAME` = `example.com`
 
 `WORKER_ROUTES` supports any number of routes, one route per line.
 

@@ -35,15 +35,21 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           REWRITE_RULES_JSON: ${{ vars.REWRITE_RULES_JSON }}
           WORKER_ROUTES: ${{ vars.WORKER_ROUTES }}
+          WORKER_ZONE_NAME: ${{ vars.WORKER_ZONE_NAME }}
         run: |
           set -euo pipefail
+
+          if [ -z "${WORKER_ZONE_NAME}" ]; then
+            echo "WORKER_ZONE_NAME is required"
+            exit 1
+          fi
 
           CMD=(npx wrangler deploy --keep-vars=true --var "REWRITE_RULES:${REWRITE_RULES_JSON}")
 
           while IFS= read -r route; do
             # Skip empty lines so users can format WORKER_ROUTES for readability.
             if [ -n "${route}" ]; then
-              CMD+=(--routes "${route}")
+              CMD+=(--routes "{\"pattern\":\"${route}\",\"zone_name\":\"${WORKER_ZONE_NAME}\"}")
             fi
           done <<< "${WORKER_ROUTES}"
 
