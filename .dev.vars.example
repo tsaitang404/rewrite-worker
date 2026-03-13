@@ -1,0 +1,5 @@
+# Local-only variables loaded by `wrangler dev`.
+# Copy this file to .dev.vars and adjust for your environment.
+
+# Example: rewrite both root and www to a shared backend path
+REWRITE_RULES='[{"match":{"hostname":"www.example.com"},"rewrite":{"hostname":"backend.example.net","path":"/share"}},{"match":{"hostname":"example.com"},"rewrite":{"hostname":"backend.example.net","path":"/share"}}]'

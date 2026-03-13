@@ -62,6 +62,10 @@ REWRITE_RULES = '[{"match":{},"rewrite":{"hostname":"origin.internal","port":844
 # Install dependencies
 npm install
 
+# Create local config from templates (first run)
+cp .env.example .env
+cp .dev.vars.example .dev.vars
+
 # Run locally with Wrangler dev server
 npm run dev
 
@@ -74,6 +78,18 @@ npm run type-check
 # Deploy
 npm run deploy
 ```
+
+### Local private config
+
+- Commit-safe templates:
+  - `.env.example` for deploy/auth variables
+  - `.dev.vars.example` for local `wrangler dev` variables
+- Machine-local files (ignored by git):
+  - `.env`
+  - `.dev.vars`
+
+This keeps repository defaults reusable while still allowing each developer
+to run locally with their own routes/rules/tokens.
 
 ## How it works
 
