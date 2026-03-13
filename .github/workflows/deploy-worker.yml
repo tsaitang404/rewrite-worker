@@ -50,6 +50,7 @@ jobs:
             echo
             echo "routes = ["
             while IFS= read -r route; do
+              route="${route%$'\r'}"
               # Skip empty lines so users can format WORKER_ROUTES for readability.
               if [ -n "${route}" ]; then
                 echo "  { pattern = \"${route}\", zone_name = \"${WORKER_ZONE_NAME}\" },"
